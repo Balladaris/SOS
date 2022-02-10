@@ -3,7 +3,7 @@ package SPRINT;
 public class Square {
     private value value;
 
-    Square(value value) {
+    public Square(value value) {
         setValue(value);
     }
 

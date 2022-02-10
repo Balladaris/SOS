@@ -5,6 +5,8 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+import static java.lang.Math.sqrt;
+
 public class GamePanel extends JPanel {
     public final int SQUARE_SIZE = 50;
     private final int MIN_GRID_SIZE = 3;
@@ -13,8 +15,9 @@ public class GamePanel extends JPanel {
     private final int Y_OFFSET = 37;
     private int currentSize = MIN_GRID_SIZE;
     private Square[][] square;
+    private final int DIAGONAL = (int) (SQUARE_SIZE * sqrt(2.0f));
 
-    GamePanel() {
+    public GamePanel() {
         populate(currentSize);
 
         addMouseListener(new MouseAdapter() {
@@ -47,6 +50,7 @@ public class GamePanel extends JPanel {
         setBackground(Color.GRAY);
         drawGrid(g);
         drawLetter(g);
+        g.drawLine(0,0, DIAGONAL * currentSize, DIAGONAL * currentSize);
     }
 
     private void drawGrid(Graphics g) {

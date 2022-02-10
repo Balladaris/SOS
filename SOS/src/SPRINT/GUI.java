@@ -14,13 +14,13 @@ public class GUI extends JFrame {
 
     GUI() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setBackground(new Color(33,50,122));
-        setLayout(new BorderLayout());
+        setTitle("SOS");
         addPanels();
         setVisible(true);
     }
     /*
     private void replayGame() {
+
     }
     */
     private void resetGame() {
@@ -47,8 +47,8 @@ public class GUI extends JFrame {
         ButtonGroup letterSelect = new ButtonGroup();
 
         pnl.setLayout(new FlowLayout());
-        pnl.setBackground(new Color(80, 20, 10));
-        pnl.setPreferredSize(new Dimension(100, 300));
+        //pnl.setBackground(new Color(80, 20, 10));
+        pnl.setPreferredSize(new Dimension(100, 200));
 
         human = new JRadioButton("Human");
         human.addActionListener(e -> {
@@ -109,7 +109,7 @@ public class GUI extends JFrame {
 
         top.setLayout(new BorderLayout());
         top.setBorder(BorderFactory.createEmptyBorder(0,10,0,30));
-        top.setBackground(new Color(125,100,200));
+        //top.setBackground(new Color(125,100,200));
 
         gameType.add(simple);
         gameType.add(general);
@@ -127,7 +127,7 @@ public class GUI extends JFrame {
         JPanel game = new JPanel();
         gameBoard.setPreferredSize(new Dimension(gameBoard.getGameSize() * gameBoard.SQUARE_SIZE + 1,
                 gameBoard.getGameSize() * gameBoard.SQUARE_SIZE + 1));
-        game.setBackground(new Color(150,75,25));
+        //game.setBackground(new Color(150,75,25));
         game.add(gameBoard);
         return game;
     }
@@ -139,7 +139,7 @@ public class GUI extends JFrame {
         JLabel recordGameText = generateLabel("Record Game", 12);
         JPanel gameButtonPanel = new JPanel();
         JButton replay = new JButton("Replay");
-        //replay.addActionListener(e -> replayGame());
+        //replay.addActionListener(e -> replayGame());   // from recorded game
         JButton newGame = new JButton("New Game");
         newGame.addActionListener(e -> resetGame());
 
