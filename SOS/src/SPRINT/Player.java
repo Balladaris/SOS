@@ -6,7 +6,7 @@ public class Player {
     private Color color;
     private String playerType;
     private Square.value letter;
-    public Boolean isTurn = false;   // to check if red or blue turn when letter placed??
+    private int score = 0;
 
     Player(Color color) {
         setColor(color);
@@ -35,5 +35,13 @@ public class Player {
 
     public void setLetter(Square.value letter) {
         this.letter = letter;
+    }
+
+    public int getScore() {
+        return score;
+    }
+
+    public void setScore(int score) {
+        this.score =  score;
     }
 }
