@@ -14,6 +14,12 @@ public class TestGame {
     }
 
     @Test
+    public void testResizeGame() {
+        gui.resize("4");
+        assertEquals(4, gui.game.getGameSize());
+    }
+
+    @Test
     public void testSimpleMode() {   // initialize as simple game
         assertEquals("Simple Game", gui.getGameType());
     }
