@@ -123,14 +123,7 @@ public class GUI extends JFrame {
 
         size.addActionListener(e -> {
             String input = size.getText();
-            try {
-                game.populate(Integer.parseInt(input));
-                addPanels();   // adding resetGame() would populate twice
-                repaint();
-            }
-            catch(NumberFormatException ignored) {   // ignore anything not integer
-
-            }
+            resize(input);
         });
 
         JLabel sizeText = generateLabel("Board Size", 12);
@@ -230,6 +223,17 @@ public class GUI extends JFrame {
         return "General Game";
     }
 
+    public void resize (String input) {
+        try {
+            game.populate(Integer.parseInt(input));
+            addPanels();
+            repaint();
+        }
+        catch(NumberFormatException ignored) {   // ignore anything not integer
+
+        }
+    }
+
     public void setGameType(Boolean type) {
         simpleGame = type;
     }
@@ -307,9 +311,9 @@ public class GUI extends JFrame {
                     else if (square[rowLetter][colLetter].getValue() == Square.value.O) {
                         g2d.drawString("O", colLetter * SQUARE_SIZE + X_OFFSET, rowLetter * SQUARE_SIZE + Y_OFFSET);
                     }
-                    else if (square[rowLetter][colLetter].getValue() == Square.value.NULL) {   // WILL DELETE ??
-                        g2d.drawString("X", colLetter * SQUARE_SIZE + X_OFFSET, rowLetter * SQUARE_SIZE + Y_OFFSET);
-                    }
+                    //else if (square[rowLetter][colLetter].getValue() == Square.value.NULL) {   // WILL DELETE ??
+                        //g2d.drawString("X", colLetter * SQUARE_SIZE + X_OFFSET, rowLetter * SQUARE_SIZE + Y_OFFSET);
+                    //}
                 }
             }
         }
@@ -333,7 +337,9 @@ public class GUI extends JFrame {
         }
 
         public void setGameSize(int size) {
-            currentSize = size;
+            if (size > 2) {
+                currentSize = size;
+            }
         }
 
         public int getGameSize() {
@@ -355,7 +361,7 @@ public class GUI extends JFrame {
         public void populate(int size) {   // will reset game
             setGameSize(size);
             setPreferredSize(new Dimension(currentSize * SQUARE_SIZE + 1, currentSize * SQUARE_SIZE + 1));
-            square = new Square[size][size];
+            square = new Square[currentSize][currentSize];
             for (int row = 0; row < currentSize; row++) {
                 for (int col = 0; col < currentSize; col++) {
                     square[row][col] = new Square(Square.value.NULL);
