@@ -1,6 +1,6 @@
 package SPRINT;
 
-import java.awt.*;
+import java.awt.Color;
 
 public class Player {
     private Color color;
@@ -10,7 +10,7 @@ public class Player {
 
     Player(Color color) {
         setColor(color);
-        setLetter(Square.value.NULL);
+        setLetter(Square.value.S);
     }
 
     public Color getColor() {

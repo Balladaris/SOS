@@ -5,17 +5,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import static java.lang.Math.sqrt;
-
-// FOCUS ON CHECK FOR SOS -- UPDATE SCORE COUNT FOR GENERAL GAME AND GREATER THAN 3X3
-
 public class GUI extends JFrame {
-    public GamePanel game = new GamePanel();
-    public Player red = new Player(Color.RED);
-    public Player blue = new Player(Color.BLUE);
     private JLabel redOrBlue, currentTurn, redScore, blueScore;
-    private Boolean simpleGame;
-    private Boolean isTurn = true;
+    private Board board = new Board();
 
     public GUI() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -23,15 +15,9 @@ public class GUI extends JFrame {
         addPanels();
         setVisible(true);
     }
-    /*
-    private void replayGame() {
 
-    }
-    */
-    private void resetGame() {
-        red.setScore(0);
-        blue.setScore(0);
-        game.populate(game.getGameSize());
+    private void resetGame(int size) {
+        board = board.getGameType() ? new Board(size) : new GeneralBoard(size);
         addPanels();
         repaint();
     }
@@ -39,10 +25,10 @@ public class GUI extends JFrame {
     private void addPanels() {   // initializing game
         Container content = getContentPane();
         content.removeAll();
-        content.add(generateSidePanel(red), BorderLayout.EAST);
-        content.add(generateSidePanel(blue), BorderLayout.WEST);
+        content.add(generateSidePanel(board.red), BorderLayout.EAST);
+        content.add(generateSidePanel(board.blue), BorderLayout.WEST);
         content.add(generateTopPanel(), BorderLayout.NORTH);
-        content.add(generateGamePanel(game), BorderLayout.CENTER);
+        content.add(generateGamePanel(), BorderLayout.CENTER);
         content.add(generateBottomPanel(), BorderLayout.SOUTH);
         pack();
     }
@@ -57,42 +43,35 @@ public class GUI extends JFrame {
         ButtonGroup letterSelect = new ButtonGroup();
 
         pnl.setLayout(new FlowLayout());
-        //pnl.setBackground(new Color(80, 20, 10));
         pnl.setPreferredSize(new Dimension(100, 200));
 
         human = new JRadioButton("Human");
-        human.addActionListener(e -> {
-            player.setPlayerType("Human");
-        });
+        human.addActionListener(e -> player.setPlayerType("Human"));
         human.doClick();
         sButton = new JRadioButton("S");
 
-        sButton.addActionListener(e -> {
-            player.setLetter(Square.value.S);
-        });
+        sButton.addActionListener(e -> player.setLetter(Square.value.S));
         sButton.doClick();
         oButton = new JRadioButton("O");
-        oButton.addActionListener(e -> {
-            player.setLetter(Square.value.O);
-        });
+        oButton.addActionListener(e -> player.setLetter(Square.value.O));
         computer = new JRadioButton("Computer");
-        computer.addActionListener(e -> {
-            player.setPlayerType("Computer");
-        });
+        computer.addActionListener(e -> player.setPlayerType("Computer"));
         playerSelect.add(human);
         letterSelect.add(sButton);
         letterSelect.add(oButton);
         playerSelect.add(computer);
 
-        scorePanel.setLayout(new FlowLayout());
-        scorePanel.add(scoreText);
-        if (player.getColor().equals(Color.RED)) {
-            redScore = new JLabel("0");
-            scorePanel.add(redScore);
-        }
-        else {
-            blueScore = new JLabel("0");
-            scorePanel.add(blueScore);
+        if (!board.getGameType()) {   // add score if general game
+            scorePanel.setLayout(new FlowLayout());
+            scorePanel.add(scoreText);
+            if (player.getColor().equals(Color.RED)) {
+                redScore = new JLabel("0");
+                scorePanel.add(redScore);
+            }
+            else {
+                blueScore = new JLabel("0");
+                scorePanel.add(blueScore);
+            }
         }
 
         pnl.add(playerText);
@@ -114,11 +93,14 @@ public class GUI extends JFrame {
         JTextField size = new JTextField(3);
 
         simple.addActionListener(e -> {
-            simpleGame = true;
+            board = new Board(board.getGameSize());
+            addPanels();
+            repaint();
         });
-        simple.doClick();
         general.addActionListener(e -> {
-            simpleGame = false;
+            board = new GeneralBoard(board.getGameSize());
+            addPanels();
+            repaint();
         });
 
         size.addActionListener(e -> {
@@ -133,8 +115,8 @@ public class GUI extends JFrame {
 
         top.setLayout(new BorderLayout());
         top.setBorder(BorderFactory.createEmptyBorder(0,10,0,30));
-        //top.setBackground(new Color(125,100,200));
 
+        (board.getGameType() ? simple : general).setSelected(true);
         gameType.add(simple);
         gameType.add(general);
         gameTypePanel.setLayout(new FlowLayout());
@@ -147,11 +129,11 @@ public class GUI extends JFrame {
         return top;
     }
 
-    private JPanel generateGamePanel(GamePanel gameBoard) {
+    private JPanel generateGamePanel() {
         JPanel game = new JPanel();
-        gameBoard.setPreferredSize(new Dimension(gameBoard.getGameSize() * gameBoard.getSquareSize() + 1,
-                gameBoard.getGameSize() * gameBoard.getSquareSize() + 1));
-        //game.setBackground(new Color(150,75,25));
+        GamePanel gameBoard = new GamePanel();
+        gameBoard.setPreferredSize(new Dimension(board.getGameSize() * board.getSquareSize() + 1,
+                board.getGameSize() * board.getSquareSize() + 1));
         game.add(gameBoard);
         return game;
     }
@@ -167,9 +149,9 @@ public class GUI extends JFrame {
         //replay.addActionListener(e -> replayGame());   // from recorded game
 
         JButton newGame = new JButton("New Game");
-        newGame.addActionListener(e -> {   // reset human/comp/s/o/game size?
-            game.setGameOver(false);
-            resetGame();
+        newGame.addActionListener(e -> {
+            board.setGameOver(false);
+            resetGame(board.getGameSize());
         });
 
         JPanel turnPanel = new JPanel();
@@ -216,34 +198,14 @@ public class GUI extends JFrame {
         return text;
     }
 
-    public String getGameType() {
-        if (simpleGame) {
-            return "Simple Game";
-        }
-        return "General Game";
-    }
-
     public void resize (String input) {
         try {
-            game.populate(Integer.parseInt(input));
-            addPanels();
+            resetGame(Integer.parseInt(input));
             repaint();
         }
         catch(NumberFormatException ignored) {   // ignore anything not integer
 
         }
-    }
-
-    public void setGameType(Boolean type) {
-        simpleGame = type;
-    }
-
-    public Boolean getTurn() {
-        return isTurn;
-    }
-
-    public void setTurn(Boolean turn) {
-        isTurn = turn;
     }
 
     public void changeText(int i, String text) {
@@ -256,28 +218,20 @@ public class GUI extends JFrame {
     }
 
     public class GamePanel extends JPanel {
-        private Boolean gameOver = false;
-        private final int SQUARE_SIZE = 50;
-        private final int MIN_GRID_SIZE = 3;
-        private final int MAX_GRID_SIZE = 12;
-        private final int X_OFFSET = 15;
-        private final int Y_OFFSET = 37;
-        private final int DIAGONAL = (int) (SQUARE_SIZE * sqrt(2.0f));
-        private int currentSize = MIN_GRID_SIZE;
-        private Square[][] square;
-
         GamePanel() {
-            populate(currentSize);
-
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     super.mouseClicked(e);
-                    int rowCheck = e.getY() / SQUARE_SIZE;
-                    int colCheck = e.getX() / SQUARE_SIZE;
-                    makeMove(rowCheck, colCheck);
+                    int rowCheck = e.getY() / board.getSquareSize();
+                    int colCheck = e.getX() / board.getSquareSize();
+                    board.makeMove(rowCheck, colCheck);
+                    makeMoveText();
+                    if (!board.getGameType()) {
+                        changeText(3, String.valueOf(board.red.getScore()));
+                        changeText(4, String.valueOf(board.blue.getScore()));
+                    }
                     repaint();
-                    gameOver = checkWin();
                 }
             });
         }
@@ -288,244 +242,59 @@ public class GUI extends JFrame {
             setBackground(Color.GRAY);
             drawGrid(g);
             drawLetter(g);
-            //g.drawLine(0,0, DIAGONAL * currentSize, DIAGONAL * currentSize);
+            drawWins(g);
         }
 
         private void drawGrid(Graphics g) {
-            for (int rowGrid = 0; rowGrid < currentSize; rowGrid++) {
-                for (int colGrid = 0; colGrid < currentSize; colGrid++) {
+            for (int rowGrid = 0; rowGrid < board.getGameSize(); rowGrid++) {
+                for (int colGrid = 0; colGrid < board.getGameSize(); colGrid++) {
                     g.setColor(Color.BLACK);
-                    g.drawRect(rowGrid * SQUARE_SIZE, colGrid * SQUARE_SIZE, SQUARE_SIZE, SQUARE_SIZE);
+                    g.drawRect(rowGrid * board.getSquareSize(), colGrid * board.getSquareSize(), board.getSquareSize(), board.getSquareSize());
                 }
             }
         }
 
-        private void drawLetter(Graphics g) {   // NEED TO ADD PLAYER COLOR OR ALL BLACK?
+        private void drawLetter(Graphics g) {
             Graphics2D g2d = (Graphics2D) g;
+            int x_OFFSET = 15;
+            int y_OFFSET = 37;
             g2d.setFont(new Font("SansSerif", Font.PLAIN, 30));
-            for (int rowLetter = 0; rowLetter < currentSize; rowLetter++) {
-                for (int colLetter = 0; colLetter < currentSize; colLetter++) {
-                    if (square[rowLetter][colLetter].getValue() == Square.value.S) {
-                        g2d.drawString("S", colLetter * SQUARE_SIZE + X_OFFSET, rowLetter * SQUARE_SIZE + Y_OFFSET);
+            for (int rowLetter = 0; rowLetter < board.getGameSize(); rowLetter++) {
+                for (int colLetter = 0; colLetter < board.getGameSize(); colLetter++) {
+                    if (board.getSquareValue(rowLetter, colLetter) == Square.value.S) {
+                        g2d.drawString("S", colLetter * board.getSquareSize() + x_OFFSET, rowLetter * board.getSquareSize() + y_OFFSET);
+                    } else if (board.getSquareValue(rowLetter, colLetter) == Square.value.O) {
+                        g2d.drawString("O", colLetter * board.getSquareSize() + x_OFFSET, rowLetter * board.getSquareSize() + y_OFFSET);
                     }
-                    else if (square[rowLetter][colLetter].getValue() == Square.value.O) {
-                        g2d.drawString("O", colLetter * SQUARE_SIZE + X_OFFSET, rowLetter * SQUARE_SIZE + Y_OFFSET);
-                    }
-                    //else if (square[rowLetter][colLetter].getValue() == Square.value.NULL) {   // WILL DELETE ??
-                        //g2d.drawString("X", colLetter * SQUARE_SIZE + X_OFFSET, rowLetter * SQUARE_SIZE + Y_OFFSET);
-                    //}
                 }
             }
         }
 
-        public void makeMove(int rowCheck, int colCheck) {
-            if (!gameOver && square[rowCheck][colCheck].getValue() == Square.value.NULL) {   // need to check playerType
-                if (!getTurn()) {
-                    square[rowCheck][colCheck].setValue(red.getLetter());
-                    red.setScore(red.getScore() + addToScore(rowCheck, colCheck));
-                    changeText(3, String.valueOf(red.getScore()));
-                    setTurn(true);
-                    changeText(1, "Blue");
-                } else {
-                    square[rowCheck][colCheck].setValue(blue.getLetter());
-                    blue.setScore(blue.getScore() + addToScore(rowCheck, colCheck));
-                    changeText(4, String.valueOf(blue.getScore()));
-                    setTurn(false);
-                    changeText(1, "Red");
+        public void drawWins(Graphics g) {
+            if (board.getLineCounter() > 0) {
+                for (int i = 0; i < board.getLineCounter(); i++) {
+                    g.setColor(board.getLineColor(i));
+                    g.drawLine(board.getLineDouble(1, i), board.getLineDouble(2, i), board.getLineDouble(3, i), board.getLineDouble(4, i));
                 }
             }
         }
 
-        public void setGameSize(int size) {
-            if (size > 2) {
-                currentSize = size;
+        private void makeMoveText() {
+            if (!board.getTurn()) {   // will place this first
+                changeText(1, "Red");
+            } else {
+                changeText(1, "Blue");
             }
-        }
-
-        public int getGameSize() {
-            return currentSize;
-        }
-
-        public int getSquareSize() {
-            return SQUARE_SIZE;
-        }
-
-        public Boolean isGameOver() {
-            return gameOver;
-        }
-
-        public void setGameOver(Boolean which) {
-            gameOver = which;
-        }
-
-        public void populate(int size) {   // will reset game
-            setGameSize(size);
-            setPreferredSize(new Dimension(currentSize * SQUARE_SIZE + 1, currentSize * SQUARE_SIZE + 1));
-            square = new Square[currentSize][currentSize];
-            for (int row = 0; row < currentSize; row++) {
-                for (int col = 0; col < currentSize; col++) {
-                    square[row][col] = new Square(Square.value.NULL);
-                }
-            }
-        }
-
-        private int addToScore(int row, int col) {
-            int totalScore = 0;
-
-            // check all around S
-            if (row > 1 && col > 1 && row < currentSize - 3 && col < currentSize - 3) {
-                if (square[row][col].getValue() == Square.value.S) {
-                    if (square[row - 1][col - 1].getValue() == Square.value.O && square[row - 2][col - 2].getValue() == Square.value.S) {
-                        totalScore += 1;
-                    }
-                    if (square[row - 1][col].getValue() == Square.value.O && square[row - 2][col].getValue() == Square.value.S) {
-                        totalScore += 1;
-                    }
-                    if (square[row - 1][col + 1].getValue() == Square.value.O && square[row - 2][col + 2].getValue() == Square.value.S) {
-                        totalScore += 1;
-                    }
-                    if (square[row][col + 1].getValue() == Square.value.O && square[row][col + 2].getValue() == Square.value.S) {
-                        totalScore += 1;
-                    }
-                    if (square[row + 1][col + 1].getValue() == Square.value.O && square[row + 2][col + 2].getValue() == Square.value.S) {
-                        totalScore += 1;
-                    }
-                    if (square[row + 1][col].getValue() == Square.value.O && square[row + 2][col].getValue() == Square.value.S) {
-                        totalScore += 1;
-                    }
-                    if (square[row + 1][col - 1].getValue() == Square.value.O && square[row + 2][col - 2].getValue() == Square.value.S) {
-                        totalScore += 1;
-                    }
-                    if (square[row][col - 1].getValue() == Square.value.O && square[row][col - 2].getValue() == Square.value.S) {
-                        totalScore += 1;
-                    }
-                }
-            }
-            // check corners if S
-            else if (row == 0 && col == 0) {
-                if (square[row][col].getValue() == Square.value.S) {
-                    if (square[row + 1][col + 1].getValue() == Square.value.O && square[row + 2][col + 2].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row + 1][col].getValue() == Square.value.O && square[row + 2][col].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row][col + 1].getValue() == Square.value.O && square[row][col + 2].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                }
-            }
-            else if (row == 0 && col == currentSize - 1) {
-                if (square[row][col].getValue() == Square.value.S) {
-                    if (square[row + 1][col].getValue() == Square.value.O && square[row + 2][col].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row + 1][col - 1].getValue() == Square.value.O && square[row + 2][col - 2].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row][col - 1].getValue() == Square.value.O && square[row][col - 2].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                }
-            }
-            else if (row == currentSize - 1 && col == 0) {
-                if (square[row][col].getValue() == Square.value.S) {
-                    if (square[row - 1][col].getValue() == Square.value.O && square [row - 2][col].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row][col + 1].getValue() == Square.value.O && square [row][col + 2].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row - 1][col + 1].getValue() == Square.value.O && square [row - 2][col + 2].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                }
-            }
-            else if (row == currentSize - 1 && col == currentSize - 1) {
-                if (square[row][col].getValue() == Square.value.S) {
-                    if (square[row - 1][col].getValue() == Square.value.O && square [row - 2][col].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row][col - 1].getValue() == Square.value.O && square [row][col - 2].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row - 1][col - 1].getValue() == Square.value.O && square [row - 2][col - 2].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                }
-            }
-            // check O not in corner
-            else if (row > 0 && col > 0 && row < currentSize - 1 && col < currentSize - 1) {
-                if (square[row][col].getValue() == Square.value.O) {
-                    if (square[row - 1][col].getValue() == Square.value.S && square[row + 1][col].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row][col - 1].getValue() == Square.value.S && square[row][col + 1].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row + 1][col - 1].getValue() == Square.value.S && square[row - 1][col + 1].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                    if (square[row - 1][col - 1].getValue() == Square.value.S && square[row + 1][col + 1].getValue() == Square.value.S) {
-                        totalScore++;
-                    }
-                }
-            }
-            return totalScore;
-        }
-
-        public Boolean checkWin() {
-            int squaresOccupied = 0;
-            if (getGameType().equals("Simple Game")) {
-                if (red.getScore() > 0) {
-                    changeText(2, "Red Won!");
-                    changeText(1, "");
-                    return true;   // if any score, SOS has been made
-                }
-                else if (blue.getScore() > 0) {
-                    changeText(2, "Blue Won!");
-                    changeText(1, "");
-                    return true;
-                }
-                for (int i = 0; i < currentSize; i++) {   // only do for loop if no win
-                    for (int j = 0; j < currentSize; j++) {
-                        if (square[i][j].getValue() != Square.value.NULL) {
-                            squaresOccupied++;
-                        }
-                    }
-                }
-            }
-            else if (getGameType().equals("General Game")) {
-                for (int i = 0; i < currentSize; i++) {
-                    for (int j = 0; j < currentSize; j++) {
-                        if (square[i][j].getValue() == Square.value.NULL) {
-                            return false;   // if any squares not occupied, game not over
-                        }
-                        squaresOccupied++;
-                    }
-                }
-                if (red.getScore() > blue.getScore()) {
-                    changeText(2, "Red Won!");
-                    changeText(1, "");
-                    return true;
-                }
-                else if (blue.getScore() > red.getScore()) {
-                    changeText(2, "Blue Won!");
-                    changeText(1, "");
-                    return true;
-                }
-                //return true;   // CHECK IF NEEDS TO BE DELETED -- move up to if/else?
-            }
-            if(squaresOccupied == currentSize * currentSize) {   // if here and true, all occupied, and no score
+            if (board.red.getScore() > board.blue.getScore() && board.getGameOver()) {   // place this if gameOver
+                changeText(2, "Red Won!");
+                changeText(1, "");
+            } else if (board.blue.getScore() > board.red.getScore() && board.getGameOver()) {
+                changeText(2, "Blue Won!");
+                changeText(1, "");
+            } else if (board.getGameOver()) {
                 changeText(2, "It's a Draw!");
                 changeText(1, "");
-                return true;
             }
-            return false;
-        }
-
-        public Square.value getSquareValue(int row, int col) {
-            return square[row][col].getValue();
         }
     }
 
