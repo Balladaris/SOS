@@ -4,10 +4,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.Objects;
 
 public class GUI extends JFrame {
     private JLabel redOrBlue, currentTurn, redScore, blueScore;
     private Board board = new Board();
+    private GamePanel game = new GamePanel();
 
     public GUI() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -28,7 +30,7 @@ public class GUI extends JFrame {
         content.add(generateSidePanel(board.red), BorderLayout.EAST);
         content.add(generateSidePanel(board.blue), BorderLayout.WEST);
         content.add(generateTopPanel(), BorderLayout.NORTH);
-        content.add(generateGamePanel(), BorderLayout.CENTER);
+        content.add(generateGamePanel(game), BorderLayout.CENTER);
         content.add(generateBottomPanel(), BorderLayout.SOUTH);
         pack();
     }
@@ -55,7 +57,22 @@ public class GUI extends JFrame {
         oButton = new JRadioButton("O");
         oButton.addActionListener(e -> player.setLetter(Square.value.O));
         computer = new JRadioButton("Computer");
-        computer.addActionListener(e -> player.setPlayerType("Computer"));
+        computer.addActionListener(e -> {
+            player.setPlayerType("Computer");
+            if (board.getTurn() && player.getColor().equals(Color.BLUE) || !board.getTurn() && player.getColor().equals(Color.RED)) {
+                try {
+                    board.makeMoveComputer();
+                } catch (AWTException ex) {
+                    ex.printStackTrace();
+                }
+            }
+            repaint();
+            if (!board.getGameType()) {   // if general game, update score text
+                changeText(3, String.valueOf(board.red.getScore()));
+                changeText(4, String.valueOf(board.blue.getScore()));
+            }
+            game.makeMoveText();
+        });
         playerSelect.add(human);
         letterSelect.add(sButton);
         letterSelect.add(oButton);
@@ -129,13 +146,12 @@ public class GUI extends JFrame {
         return top;
     }
 
-    private JPanel generateGamePanel() {
-        JPanel game = new JPanel();
-        GamePanel gameBoard = new GamePanel();
+    private JPanel generateGamePanel(GamePanel gameBoard) {
+        JPanel game1 = new JPanel();
         gameBoard.setPreferredSize(new Dimension(board.getGameSize() * board.getSquareSize() + 1,
                 board.getGameSize() * board.getSquareSize() + 1));
-        game.add(gameBoard);
-        return game;
+        game1.add(gameBoard);
+        return game1;
     }
 
     private JPanel generateBottomPanel() {
@@ -217,7 +233,7 @@ public class GUI extends JFrame {
         }
     }
 
-    public class GamePanel extends JPanel {
+    private class GamePanel extends JPanel {
         GamePanel() {
             addMouseListener(new MouseAdapter() {
                 @Override
@@ -225,9 +241,13 @@ public class GUI extends JFrame {
                     super.mouseClicked(e);
                     int rowCheck = e.getY() / board.getSquareSize();
                     int colCheck = e.getX() / board.getSquareSize();
-                    board.makeMove(rowCheck, colCheck);
+                    try {   // needed for makeMoveComputer
+                        board.makeMove(rowCheck, colCheck);
+                    } catch (AWTException ex) {
+                        ex.printStackTrace();
+                    }
                     makeMoveText();
-                    if (!board.getGameType()) {
+                    if (!board.getGameType()) {   // if general game, update score text
                         changeText(3, String.valueOf(board.red.getScore()));
                         changeText(4, String.valueOf(board.blue.getScore()));
                     }

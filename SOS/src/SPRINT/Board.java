@@ -1,6 +1,9 @@
 package SPRINT;
 
 import java.awt.*;
+import java.util.Objects;
+import java.util.Random;
+import java.util.Vector;
 
 public class Board {
     private final int MIN_GRID_SIZE = 3;
@@ -15,6 +18,7 @@ public class Board {
     private Square[][] square;
     private Double[] lines = new Double[currentSize * currentSize];   // ensure enough space for combinations
     private int lineCounter = 0;
+    private Random random = new Random();
 
     public Board() {
         populate(currentSize);
@@ -65,7 +69,7 @@ public class Board {
         return currentSize;
     }
 
-    public Boolean getTurn() {
+    public Boolean getTurn() {   // getTurn: blue, not getTurn: red
         return isTurn;
     }
 
@@ -109,7 +113,19 @@ public class Board {
         lineCounter++;
     }
 
-    public void makeMove(int rowCheck, int colCheck) {
+    private Vector<Coordinate> getNullSquares() {   // all squares that == null
+        Vector<Coordinate> coords = new Vector<Coordinate>();
+        for (int i = 0; i < currentSize; i++) {
+            for (int j = 0; j < currentSize; j++) {
+                if (square[i][j].getValue() == Square.value.NULL) {
+                    coords.add(new Coordinate(i, j));
+                }
+            }
+        }
+        return coords;
+    }
+
+    public void makeMove(int rowCheck, int colCheck) throws AWTException {
         if (!gameOver && square[rowCheck][colCheck].getValue() == Square.value.NULL) {   // need to check playerType
             if (!getTurn()) {
                 square[rowCheck][colCheck].setValue(red.getLetter());
@@ -121,15 +137,38 @@ public class Board {
                 setTurn(false);
             }
             setGameOver(checkWin());
+            if (Objects.equals(red.getPlayerType(), "Computer") && !getTurn() && !gameOver ||
+                    Objects.equals(blue.getPlayerType(), "Computer") && getTurn() && !gameOver) {
+                makeMoveComputer();
+            }
         }
     }
 
-    public Boolean checkWin() {
+    public void makeMoveComputer() throws AWTException {
+        Vector<Coordinate> nullSquares = getNullSquares();
+        Coordinate select = nullSquares.get(random.nextInt(nullSquares.size()));
+        Square letterSelect = new Square(Square.value.values()[random.nextInt(2)]);
+
+        if (!getTurn()) {
+            square[select.getRow()][select.getCol()].setValue(letterSelect.getValue());
+            red.setScore(red.getScore() + addToScore(select.getRow(), select.getCol()));
+            setTurn(true);
+        } else {
+            square[select.getRow()][select.getCol()].setValue(letterSelect.getValue());
+            blue.setScore(blue.getScore() + addToScore(select.getRow(), select.getCol()));
+            setTurn(false);
+        }
+        setGameOver(checkWin());
+        if (Objects.equals(red.getPlayerType(), "Computer") && !getTurn() && !gameOver ||
+                Objects.equals(blue.getPlayerType(), "Computer") && getTurn() && !gameOver) {
+            makeMoveComputer();
+        }
+    }
+
+    protected Boolean checkWin() {
         int squaresOccupied = 0;
-        if (red.getScore() > 0) {
+        if (red.getScore() > 0 || blue.getScore() > 0) {
             return true;   // if any score, SOS has been made
-        } else if (blue.getScore() > 0) {
-            return true;
         }
         for (int i = 0; i < getGameSize(); i++) {   // only do for loop if no win
             for (int j = 0; j < getGameSize(); j++) {
@@ -178,60 +217,6 @@ public class Board {
             if (square[row][col - 1].getValue() == Square.value.O && square[row][col - 2].getValue() == Square.value.S) {
                 totalScore += 1;
                 updateLines((col + 1) * SQUARE_SIZE, (col - 2) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
-            }
-        }
-        // check corners if S
-        else if (row <= 1 && col <= 1 && square[row][col].getValue() == Square.value.S) {
-            if (square[row + 1][col + 1].getValue() == Square.value.O && square[row + 2][col + 2].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines(col * SQUARE_SIZE, (col + 3) * SQUARE_SIZE, row * SQUARE_SIZE, (row + 3) * SQUARE_SIZE);
-            }
-            if (square[row + 1][col].getValue() == Square.value.O && square[row + 2][col].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines(((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), row * SQUARE_SIZE, (row + 3) * SQUARE_SIZE);
-            }
-            if (square[row][col + 1].getValue() == Square.value.O && square[row][col + 2].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines(col * SQUARE_SIZE, (col + 3) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
-            }
-        } else if (row <= 1 && col >= currentSize - 2 && col <= currentSize - 1 && square[row][col].getValue() == Square.value.S) {
-            if (square[row + 1][col].getValue() == Square.value.O && square[row + 2][col].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines(((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), row * SQUARE_SIZE, (row + 3) * SQUARE_SIZE);
-            }
-            if (square[row + 1][col - 1].getValue() == Square.value.O && square[row + 2][col - 2].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines((col + 1) * SQUARE_SIZE, (col - 2) * SQUARE_SIZE, row * SQUARE_SIZE, (row + 3) * SQUARE_SIZE);
-            }
-            if (square[row][col - 1].getValue() == Square.value.O && square[row][col - 2].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines((col + 1) * SQUARE_SIZE, (col - 2) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
-            }
-        } else if (row >= currentSize - 2 && row <= currentSize - 1 && col <= 1 && square[row][col].getValue() == Square.value.S) {
-            if (square[row - 1][col].getValue() == Square.value.O && square[row - 2][col].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines(((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), (row - 2) * SQUARE_SIZE, (row + 1) * SQUARE_SIZE);
-            }
-            if (square[row][col + 1].getValue() == Square.value.O && square[row][col + 2].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines(col * SQUARE_SIZE, (col + 3) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
-            }
-            if (square[row - 1][col + 1].getValue() == Square.value.O && square[row - 2][col + 2].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines(col * SQUARE_SIZE, (col + 3) * SQUARE_SIZE, (row + 1) * SQUARE_SIZE, (row - 2) * SQUARE_SIZE);
-            }
-        } else if (row >= currentSize - 2 && row <= currentSize - 1 && col >= currentSize - 2 && col <= currentSize - 1 && square[row][col].getValue() == Square.value.S) {
-            if (square[row - 1][col].getValue() == Square.value.O && square[row - 2][col].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines(((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), (row - 2) * SQUARE_SIZE, (row + 1) * SQUARE_SIZE);
-            }
-            if (square[row][col - 1].getValue() == Square.value.O && square[row][col - 2].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines((col + 1) * SQUARE_SIZE, (col - 2) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
-            }
-            if (square[row - 1][col - 1].getValue() == Square.value.O && square[row - 2][col - 2].getValue() == Square.value.S) {
-                totalScore++;
-                updateLines((col - 2) * SQUARE_SIZE, (col + 1) * SQUARE_SIZE, (row - 2) * SQUARE_SIZE, (row + 1) * SQUARE_SIZE);
             }
         }
         // check S sides
@@ -318,6 +303,60 @@ public class Board {
             if (square[row][col + 1].getValue() == Square.value.O && square[row][col + 2].getValue() == Square.value.S) {
                 totalScore++;
                 updateLines(col * SQUARE_SIZE, (col + 3) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
+            }
+        }
+        // check corners if S
+        else if (row <= 1 && col <= 1 && square[row][col].getValue() == Square.value.S) {
+            if (getGameSize() > 3 && square[row + 1][col + 1].getValue() == Square.value.O && square[row + 2][col + 2].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines(col * SQUARE_SIZE, (col + 3) * SQUARE_SIZE, row * SQUARE_SIZE, (row + 3) * SQUARE_SIZE);
+            }
+            if (getGameSize() > 3 && square[row + 1][col].getValue() == Square.value.O && square[row + 2][col].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines(((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), row * SQUARE_SIZE, (row + 3) * SQUARE_SIZE);
+            }
+            if (getGameSize() > 3 && square[row][col + 1].getValue() == Square.value.O && square[row][col + 2].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines(col * SQUARE_SIZE, (col + 3) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
+            }
+        } else if (row <= 1 && col >= currentSize - 2 && col <= currentSize - 1 && square[row][col].getValue() == Square.value.S) {
+            if (getGameSize() > 3 && square[row + 1][col].getValue() == Square.value.O && square[row + 2][col].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines(((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), row * SQUARE_SIZE, (row + 3) * SQUARE_SIZE);
+            }
+            if (getGameSize() > 3 && square[row + 1][col - 1].getValue() == Square.value.O && square[row + 2][col - 2].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines((col + 1) * SQUARE_SIZE, (col - 2) * SQUARE_SIZE, row * SQUARE_SIZE, (row + 3) * SQUARE_SIZE);
+            }
+            if (square[row][col - 1].getValue() == Square.value.O && square[row][col - 2].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines((col + 1) * SQUARE_SIZE, (col - 2) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
+            }
+        } else if (row >= currentSize - 2 && row <= currentSize - 1 && col <= 1 && square[row][col].getValue() == Square.value.S) {
+            if (square[row - 1][col].getValue() == Square.value.O && square[row - 2][col].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines(((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), (row - 2) * SQUARE_SIZE, (row + 1) * SQUARE_SIZE);
+            }
+            if (getGameSize() > 3 && square[row][col + 1].getValue() == Square.value.O && square[row][col + 2].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines(col * SQUARE_SIZE, (col + 3) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
+            }
+            if (getGameSize() > 3 && square[row - 1][col + 1].getValue() == Square.value.O && square[row - 2][col + 2].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines(col * SQUARE_SIZE, (col + 3) * SQUARE_SIZE, (row + 1) * SQUARE_SIZE, (row - 2) * SQUARE_SIZE);
+            }
+        } else if (row >= currentSize - 2 && row <= currentSize - 1 && col >= currentSize - 2 && col <= currentSize - 1 && square[row][col].getValue() == Square.value.S) {
+            if (square[row - 1][col].getValue() == Square.value.O && square[row - 2][col].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines(((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((col + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), (row - 2) * SQUARE_SIZE, (row + 1) * SQUARE_SIZE);
+            }
+            if (square[row][col - 1].getValue() == Square.value.O && square[row][col - 2].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines((col + 1) * SQUARE_SIZE, (col - 2) * SQUARE_SIZE, ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE), ((row + 1) * SQUARE_SIZE) - (int) (0.5 * SQUARE_SIZE));
+            }
+            if (square[row - 1][col - 1].getValue() == Square.value.O && square[row - 2][col - 2].getValue() == Square.value.S) {
+                totalScore++;
+                updateLines((col - 2) * SQUARE_SIZE, (col + 1) * SQUARE_SIZE, (row - 2) * SQUARE_SIZE, (row + 1) * SQUARE_SIZE);
             }
         }
         // check O not in corner

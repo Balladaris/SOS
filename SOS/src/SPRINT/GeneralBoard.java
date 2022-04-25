@@ -11,7 +11,7 @@ public class GeneralBoard extends Board {
         setGameType(false);
     }
 
-    public Boolean checkWin() {
+    protected Boolean checkWin() {
         int squaresOccupied = 0;
         for (int i = 0; i < getGameSize(); i++) {
             for (int j = 0; j < getGameSize(); j++) {

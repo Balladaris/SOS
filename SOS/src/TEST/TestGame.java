@@ -3,103 +3,123 @@ package TEST;
 import SPRINT.*;
 import org.junit.*;
 
+import java.awt.*;
+
 import static org.junit.Assert.*;
 
 public class TestGame {
-    Board gui = new Board();
+    Board board = new Board();
 
     @Test
     public void testGameSize() {   // initialize at size 3x3
-        assertEquals(3, gui.getGameSize());
+        assertEquals(3, board.getGameSize());
     }
 
     @Test
     public void testResizeGame() {
-        gui = new Board(4);
-        assertEquals(4, gui.getGameSize());
+        board = new Board(4);
+        assertEquals(4, board.getGameSize());
     }
 
     @Test
     public void testSimpleMode() {   // initialize as simple game
-        assertEquals(true, gui.getGameType());   // true means simple
+        assertEquals(true, board.getGameType());   // true means simple
     }
 
     @Test
     public void testGeneralMode() {
-        gui = new GeneralBoard();
-        assertEquals(false, gui.getGameType());
+        board = new GeneralBoard();
+        assertEquals(false, board.getGameType());
     }
 
     @Test
-    public void testSPlacement() {   // initialize player selection as s and check if placed
-        gui.blue.setLetter(Square.value.S);
-        gui.makeMove(0, 0);
-        assertEquals(Square.value.S, gui.getSquareValue(0, 0));
+    public void testSPlacement() throws AWTException {   // initialize player selection as s and check if placed
+        board.blue.setLetter(Square.value.S);
+        board.makeMove(0, 0);
+        assertEquals(Square.value.S, board.getSquareValue(0, 0));
     }
 
     @Test
-    public void testOPlacement() {
-        gui.blue.setLetter(Square.value.O);   // blue turn first
-        gui.makeMove(0,0);
-        assertEquals(Square.value.O, gui.getSquareValue(0,0));
+    public void testOPlacement() throws AWTException {
+        board.blue.setLetter(Square.value.O);   // blue turn first
+        board.makeMove(0,0);
+        assertEquals(Square.value.O, board.getSquareValue(0,0));
     }
 
     @Test
-    public void testSimpleWin() {   // will take turns. blue is 'S', red is 'O'
-        gui.blue.setLetter(Square.value.S);
-        gui.red.setLetter(Square.value.O);
-        gui.makeMove(0, 0);
-        gui.makeMove(0, 1);
-        gui.makeMove(0, 2);
-        assertEquals(true, gui.getGameOver());
+    public void testSimpleWin() throws AWTException {   // will take turns. blue is 'S', red is 'O'
+        board.blue.setLetter(Square.value.S);
+        board.red.setLetter(Square.value.O);
+        board.makeMove(0, 0);
+        board.makeMove(0, 1);
+        board.makeMove(0, 2);
+        assertEquals(true, board.getGameOver());
     }
 
     @Test
-    public void testGeneralWin() {
-        gui = new GeneralBoard();
-        gui.blue.setLetter(Square.value.S);
-        gui.red.setLetter(Square.value.O);
-        gui.makeMove(0, 0);   // make 'SOS' combination to generate score
-        gui.makeMove(0, 1);
-        gui.makeMove(0, 2);
-        assertEquals(false, gui.getGameOver());
-        for (int i = 0; i < gui.getGameSize(); i++) {
-            for (int j = 0; j < gui.getGameSize(); j++) {
-                if (gui.getSquareValue(i, j) == Square.value.NULL) {   // place 'S' in all empty squares
-                    gui.makeMove(i, j);
+    public void testGeneralWin() throws AWTException {
+        board = new GeneralBoard();
+        board.blue.setLetter(Square.value.S);
+        board.red.setLetter(Square.value.O);
+        board.makeMove(0, 0);   // make 'SOS' combination to generate score
+        board.makeMove(0, 1);
+        board.makeMove(0, 2);
+        assertEquals(false, board.getGameOver());
+        for (int i = 0; i < board.getGameSize(); i++) {
+            for (int j = 0; j < board.getGameSize(); j++) {
+                if (board.getSquareValue(i, j) == Square.value.NULL) {   // place 'S' in all empty squares
+                    board.makeMove(i, j);
                 }
             }
         }
-        assertEquals(4, gui.blue.getScore()); // if red changes to 'O' and place sequentially, will be 4-0
-        assertEquals(0, gui.red.getScore());
-        assertEquals(true, gui.getGameOver());
+        assertEquals(4, board.blue.getScore()); // if red changes to 'O' and place sequentially, will be 4-0
+        assertEquals(0, board.red.getScore());
+        assertEquals(true, board.getGameOver());
     }
 
     @Test
-    public void testSimpleGameIsDraw() {
-        gui.blue.setLetter(Square.value.S);
-        gui.red.setLetter(Square.value.S);
-        for (int i = 0; i < gui.getGameSize(); i++) {
-            for (int j = 0; j < gui.getGameSize(); j++) {
-                gui.makeMove(i, j);   // would be full board of "S"
+    public void testSimpleGameIsDraw() throws AWTException {
+        board.blue.setLetter(Square.value.S);
+        board.red.setLetter(Square.value.S);
+        for (int i = 0; i < board.getGameSize(); i++) {
+            for (int j = 0; j < board.getGameSize(); j++) {
+                board.makeMove(i, j);   // would be full board of "S"
             }
         }
-        assertEquals(0, gui.red.getScore());   // if scores 0, and game is over
-        assertEquals(0, gui.blue.getScore());
-        assertEquals(true, gui.getGameOver());
+        assertEquals(0, board.red.getScore());   // if scores 0, and game is over
+        assertEquals(0, board.blue.getScore());
+        assertEquals(true, board.getGameOver());
     }
 
     @Test
-    public void testGeneralGameIsDraw() {
-        gui.blue.setLetter(Square.value.S);
-        gui.red.setLetter(Square.value.S);
-        for (int i = 0; i < gui.getGameSize(); i++) {
-            for (int j = 0; j < gui.getGameSize(); j++) {
-                gui.makeMove(i, j);   // would be full board of "S"
+    public void testGeneralGameIsDraw() throws AWTException {
+        board = new GeneralBoard();
+        board.blue.setLetter(Square.value.S);
+        board.red.setLetter(Square.value.S);
+        for (int i = 0; i < board.getGameSize(); i++) {
+            for (int j = 0; j < board.getGameSize(); j++) {
+                board.makeMove(i, j);   // would be full board of "S"
             }
         }
-        assertEquals(0, gui.red.getScore());   // if scores 0, and game is over
-        assertEquals(0, gui.blue.getScore());
-        assertEquals(true, gui.getGameOver());
+        assertEquals(0, board.red.getScore());   // if scores 0, and game is over
+        assertEquals(0, board.blue.getScore());
+        assertEquals(true, board.getGameOver());
+    }
+
+    @Test
+    public void testSimpleComputerMove() throws AWTException { // if both computers, will move until game over
+        board.blue.setPlayerType("Computer");
+        board.red.setPlayerType("Computer");
+        board.makeMoveComputer();
+        assertEquals(true, board.getGameOver());
+    }
+
+    @Test
+    public void testGeneralComputerMove() throws AWTException {
+        board = new GeneralBoard();
+        board.blue.setPlayerType("Computer");
+        board.red.setPlayerType("Computer");
+        board.makeMoveComputer();
+        assertEquals(true, board.getGameOver());
     }
 }
